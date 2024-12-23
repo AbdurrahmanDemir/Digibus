@@ -130,6 +130,7 @@ $conn->close();
             <input type="password" id="kullanici_sifre" name="kullanici_sifre" required><br>
             <button type="submit" name="login">Giriş Yap</button>
         </form>
+        <!-- abdurrahman -->
     <?php endif; ?>
 </body>
 </html>
