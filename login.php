@@ -23,6 +23,8 @@ if (isset($_POST['logout'])) {
     exit();
 }
 
+
+
 // Kullanıcı Kaydolma
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     $kullanici_id = $conn->real_escape_string($_POST['kullanici_id']); // TC Kimlik No
@@ -72,11 +74,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         if (password_verify($kullanici_sifre, $user['kullanici_sifre'])) {
-            $_SESSION['kullanici_ad'] = $user['kullanici_ad'];
-            $_SESSION['kullanici_soyad'] = $user['kullanici_soyad'];
-            $_SESSION['rol_id'] = $user['rol_id'];
-            echo "<p>Giriş başarılı. Hoşgeldiniz, " . $user['kullanici_ad'] . " " . $user['kullanici_soyad'] . "!</p>";
-        } else {
+            session_start(); // Oturumu başlat
+            $_SESSION['kullanici_id'] = $user['kullanici_id']; // Kullanıcı ID'sini oturuma ekle
+            $_SESSION['kullanici_ad'] = $user['kullanici_ad']; // Kullanıcı adı
+            $_SESSION['kullanici_soyad'] = $user['kullanici_soyad']; // Kullanıcı soyadı
+        
+            // Oturumda saklanan bilgileri kontrol etmek için:
+            echo "<pre>";
+            print_r($_SESSION);
+            echo "</pre>";
+        
+            // Yönlendirme
+            header("Location: biletal.php");
+            exit();
+        }
+         else {
             echo "<p>Şifre yanlış!</p>";
         }
     } else {

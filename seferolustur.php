@@ -16,9 +16,7 @@ if ($conn->connect_error) {
 }
 
 session_start();
-if (!isset($_SESSION['rol_id']) || $_SESSION['rol_id'] != 1) {
-    die("Bu sayfaya erişim yetkiniz yok. Lütfen giriş yapın ve admin yetkisine sahip olduğunuzdan emin olun.");
-}
+
 
 // Otobüs listesini getir
 $otobüsler = [];
