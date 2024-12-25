@@ -14,10 +14,6 @@ if ($conn->connect_error) {
 }
 
 session_start();
-if (!isset($_SESSION['rol_id']) || $_SESSION['rol_id'] != 1) {
-    die("Bu sayfaya erişim yetkiniz yok. Lütfen giriş yapın ve admin yetkisine sahip olduğunuzdan emin olun.");
-}
-
 // Otobüs Ekleme
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bus'])) {
     $kapasite = isset($_POST['kapasite']) ? intval($_POST['kapasite']) : null;

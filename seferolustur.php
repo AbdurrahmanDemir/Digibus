@@ -7,8 +7,6 @@ define('DB_NAME', 'digibus');
 
 // Veritabanına bağlan
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
-
-// Bağlantıyı kontrol et
 if ($conn->connect_error) {
     die("Veritabanı bağlantısı başarısız: " . $conn->connect_error);
 }
@@ -27,15 +25,25 @@ if ($result->num_rows > 0) {
     echo "<p>Hiç kayıtlı otobüs bulunamadı.</p>";
 }
 
+// İller listesini getir
+$iller = [];
+$illerQuery = "SELECT il_id, il_adi FROM iller ORDER BY il_adi";
+$illerResult = $conn->query($illerQuery);
+if ($illerResult->num_rows > 0) {
+    while ($row = $illerResult->fetch_assoc()) {
+        $iller[] = $row;
+    }
+}
+
 // Sefer Ekleme
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_sefer'])) {
-    $sefer_id = isset($_POST['sefer_id']) ? $conn->real_escape_string($_POST['sefer_id']) : null;
-    $otobüs_id = isset($_POST['otobüs_id']) ? $conn->real_escape_string($_POST['otobüs_id']) : null;
-    $baslangic_noktasi = isset($_POST['baslangic_noktasi']) ? $conn->real_escape_string($_POST['baslangic_noktasi']) : null;
-    $varis_noktasi = isset($_POST['varis_noktasi']) ? $conn->real_escape_string($_POST['varis_noktasi']) : null;
-    $tarih = isset($_POST['tarih']) ? $conn->real_escape_string($_POST['tarih']) : null;
-    $saat = isset($_POST['saat']) ? $conn->real_escape_string($_POST['saat']) : null;
-    $sefer_ad = isset($_POST['sefer_ad']) ? $conn->real_escape_string($_POST['sefer_ad']) : null;
+    $sefer_id = $conn->real_escape_string($_POST['sefer_id']);
+    $otobüs_id = $conn->real_escape_string($_POST['otobüs_id']);
+    $baslangic_noktasi = $conn->real_escape_string($_POST['baslangic_noktasi']);
+    $varis_noktasi = $conn->real_escape_string($_POST['varis_noktasi']);
+    $tarih = $conn->real_escape_string($_POST['tarih']);
+    $saat = $conn->real_escape_string($_POST['saat']);
+    $sefer_ad = $conn->real_escape_string($_POST['sefer_ad']);
 
     if (empty($sefer_id) || empty($otobüs_id) || empty($baslangic_noktasi) || empty($varis_noktasi) || empty($tarih) || empty($saat) || empty($sefer_ad)) {
         echo "<p style='color: red;'>Tüm alanları doldurmanız gerekiyor.</p>";
@@ -116,10 +124,20 @@ $conn->close();
         </select>
 
         <label for="baslangic_noktasi">Başlangıç Noktası:</label>
-        <input type="text" id="baslangic_noktasi" name="baslangic_noktasi" placeholder="Örn: Ankara" required>
+        <select id="baslangic_noktasi" name="baslangic_noktasi" required>
+            <option value="">Başlangıç Noktası Seçin</option>
+            <?php foreach ($iller as $il): ?>
+                <option value="<?= $il['il_id'] ?>"><?= $il['il_adi'] ?></option>
+            <?php endforeach; ?>
+        </select>
 
         <label for="varis_noktasi">Varış Noktası:</label>
-        <input type="text" id="varis_noktasi" name="varis_noktasi" placeholder="Örn: İstanbul" required>
+        <select id="varis_noktasi" name="varis_noktasi" required>
+            <option value="">Varış Noktası Seçin</option>
+            <?php foreach ($iller as $il): ?>
+                <option value="<?= $il['il_id'] ?>"><?= $il['il_adi'] ?></option>
+            <?php endforeach; ?>
+        </select>
 
         <label for="tarih">Tarih:</label>
         <input type="date" id="tarih" name="tarih" required>

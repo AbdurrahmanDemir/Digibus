@@ -5,6 +5,7 @@ define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME', 'digibus');
 
+// Veritabanına bağlan
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 if ($conn->connect_error) {
     die("Veritabanı bağlantısı başarısız: " . $conn->connect_error);
@@ -12,23 +13,32 @@ if ($conn->connect_error) {
 
 session_start();
 
-// Sefer bilgilerini al
-$sefer_id = $_GET['sefer_id'];
+// Kullanıcı oturum kontrolü
+if (!isset($_GET['sefer_id'])) {
+    die("<p>Sefer ID belirtilmedi.</p>");
+}
+
+$sefer_id = $conn->real_escape_string($_GET['sefer_id']);
 $seferDetaylari = [];
 $molalar = [];
 
+// Sefer bilgileri
 $seferQuery = "
-    SELECT baslangic_noktasi, varis_noktasi
-    FROM seferler
-    WHERE sefer_id = '$sefer_id'
+    SELECT s.sefer_ad, i1.il_adi AS baslangic_il, i1.latitude AS baslangic_lat, i1.longitude AS baslangic_lng, 
+           i2.il_adi AS varis_il, i2.latitude AS varis_lat, i2.longitude AS varis_lng, s.tarih, s.saat
+    FROM seferler AS s
+    JOIN iller AS i1 ON s.baslangic_noktasi = i1.il_id
+    JOIN iller AS i2 ON s.varis_noktasi = i2.il_id
+    WHERE s.sefer_id = '$sefer_id'
 ";
 $seferResult = $conn->query($seferQuery);
 if ($seferResult && $seferResult->num_rows > 0) {
     $seferDetaylari = $seferResult->fetch_assoc();
 }
 
+// Mola bilgileri
 $molaQuery = "
-    SELECT mola_ad, latitude, longitude
+    SELECT mola_ad, latitude, longitude, baslangic, bitis
     FROM mola
     WHERE sefer_id = '$sefer_id'
 ";
@@ -40,6 +50,25 @@ if ($molaResult && $molaResult->num_rows > 0) {
 }
 
 $conn->close();
+
+function kalanSure($molaSaat) {
+    $now = new DateTime();
+    $molaZamani = new DateTime($molaSaat);
+
+    if ($molaZamani > $now) {
+        $interval = $now->diff($molaZamani);
+        return $interval->format('%h saat %i dakika');
+    } else {
+        return 'Geçti';
+    }
+}
+
+function molaSuresi($baslangic, $bitis) {
+    $baslangicZamani = new DateTime($baslangic);
+    $bitisZamani = new DateTime($bitis);
+    $interval = $baslangicZamani->diff($bitisZamani);
+    return $interval->format('%h saat %i dakika');
+}
 ?>
 
 <!DOCTYPE html>
@@ -48,49 +77,77 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sefer Detayları</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
-    <script>
-        function initMap() {
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 6,
-                center: { lat: 39.92077, lng: 32.85411 }, // Örnek merkez (Türkiye)
-            });
-
-            // Başlangıç noktası
-            const startPoint = {
-                lat: <?= $seferDetaylari['baslangic_noktasi_lat'] ?>,
-                lng: <?= $seferDetaylari['baslangic_noktasi_lng'] ?>
-            };
-            new google.maps.Marker({
-                position: startPoint,
-                map,
-                label: "Başlangıç",
-            });
-
-            // Varış noktası
-            const endPoint = {
-                lat: <?= $seferDetaylari['varis_noktasi_lat'] ?>,
-                lng: <?= $seferDetaylari['varis_noktasi_lng'] ?>
-            };
-            new google.maps.Marker({
-                position: endPoint,
-                map,
-                label: "Varış",
-            });
-
-            // Molalar
-            <?php foreach ($molalar as $mola): ?>
-            new google.maps.Marker({
-                position: { lat: <?= $mola['latitude'] ?>, lng: <?= $mola['longitude'] ?> },
-                map,
-                label: "<?= $mola['mola_ad'] ?>",
-            });
-            <?php endforeach; ?>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
         }
-    </script>
+    </style>
 </head>
-<body onload="initMap()">
+<body>
     <h1>Sefer Detayları</h1>
-    <div id="map" style="height: 500px; width: 100%;"></div>
+    <?php if (!empty($seferDetaylari)): ?>
+        <h2>Sefer Bilgileri</h2>
+        <p><strong>Sefer Adı:</strong> <?= $seferDetaylari['sefer_ad'] ?></p>
+        <p><strong>Başlangıç Noktası:</strong> <?= $seferDetaylari['baslangic_il'] ?></p>
+        <p><strong>Varış Noktası:</strong> <?= $seferDetaylari['varis_il'] ?></p>
+        <p><strong>Tarih:</strong> <?= $seferDetaylari['tarih'] ?></p>
+        <p><strong>Saat:</strong> <?= $seferDetaylari['saat'] ?></p>
+    <?php endif; ?>
+
+    <?php if (!empty($molalar)): ?>
+        <h2>Mola Bilgileri</h2>
+        <table border="1">
+            <tr>
+                <th>Mola Adı</th>
+                <th>Başlangıç</th>
+                <th>Bitiş</th>
+                <th>Kalan Süre</th>
+                <th>Mola Süresi</th>
+            </tr>
+            <?php foreach ($molalar as $mola): ?>
+                <tr>
+                    <td><?= $mola['mola_ad'] ?></td>
+                    <td><?= $mola['baslangic'] ?></td>
+                    <td><?= $mola['bitis'] ?></td>
+                    <td><?= kalanSure($mola['baslangic']) ?></td>
+                    <td><?= molaSuresi($mola['baslangic'], $mola['bitis']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p>Bu sefere ait mola bilgisi bulunamadı.</p>
+    <?php endif; ?>
+
+    <div id="map"></div>
+
+    <script>
+        const map = L.map('map').setView([<?= $seferDetaylari['baslangic_lat'] ?>, <?= $seferDetaylari['baslangic_lng'] ?>], 7);
+
+        // OpenStreetMap Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Başlangıç Noktası Marker
+        L.marker([<?= $seferDetaylari['baslangic_lat'] ?>, <?= $seferDetaylari['baslangic_lng'] ?>])
+            .addTo(map)
+            .bindPopup("<b>Başlangıç:</b> <?= $seferDetaylari['baslangic_il'] ?>");
+
+        // Varış Noktası Marker
+        L.marker([<?= $seferDetaylari['varis_lat'] ?>, <?= $seferDetaylari['varis_lng'] ?>])
+            .addTo(map)
+            .bindPopup("<b>Varış:</b> <?= $seferDetaylari['varis_il'] ?>");
+
+        // Molalar Marker
+        <?php foreach ($molalar as $mola): ?>
+        L.marker([<?= $mola['latitude'] ?>, <?= $mola['longitude'] ?>])
+            .addTo(map)
+            .bindPopup("<b>Mola:</b> <?= $mola['mola_ad'] ?>");
+        <?php endforeach; ?>
+    </script>
 </body>
 </html>

@@ -83,12 +83,13 @@ $biletBilgileri = [];
 if (isset($_SESSION['kullanici_id'])) {
     $kullanici_id = $_SESSION['kullanici_id'];
     $biletQuery = "
-        SELECT b.koltuk_no, b.bilet_fiyat, y.durum, s.sefer_ad, s.tarih, s.saat
-        FROM bilet AS b
-        JOIN yolcu AS y ON b.yolcu_id = y.yolcu_id
-        JOIN seferler AS s ON b.sefer_id = s.sefer_id
-        WHERE y.kullanici_id = '$kullanici_id'
-    ";
+    SELECT b.koltuk_no, b.bilet_fiyat, y.durum, s.sefer_ad, s.tarih, s.saat, b.sefer_id
+    FROM bilet AS b
+    JOIN yolcu AS y ON b.yolcu_id = y.yolcu_id
+    JOIN seferler AS s ON b.sefer_id = s.sefer_id
+    WHERE y.kullanici_id = '$kullanici_id'
+";
+
     $biletResult = $conn->query($biletQuery);
 
     if ($biletResult && $biletResult->num_rows > 0) {
@@ -125,6 +126,7 @@ $conn->close();
                     <th>Koltuk No</th>
                     <th>Fiyat</th>
                     <th>Durum</th>
+                    <th>Detaylar</th>
                 </tr>
                 <?php foreach ($biletBilgileri as $bilet): ?>
                     <tr>
@@ -134,6 +136,11 @@ $conn->close();
                         <td><?= $bilet['koltuk_no'] ?></td>
                         <td><?= $bilet['bilet_fiyat'] ?> TL</td>
                         <td><?= $bilet['durum'] ?></td>
+                        <form method="GET" action="seferdetaylari.php">
+    <input type="hidden" name="sefer_id" value="<?= $bilet['sefer_id'] ?>">
+    <button type="submit">Detay Gör</button>
+</form>
+
                     </tr>
                 <?php endforeach; ?>
             </table>
