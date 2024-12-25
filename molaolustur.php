@@ -7,16 +7,11 @@ define('DB_NAME', 'digibus');
 
 // Veritabanına bağlan
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
-
-// Bağlantıyı kontrol et
 if ($conn->connect_error) {
     die("Veritabanı bağlantısı başarısız: " . $conn->connect_error);
 }
 
 session_start();
-if (!isset($_SESSION['rol_id']) || $_SESSION['rol_id'] != 1) {
-    die("Bu sayfaya erişim yetkiniz yok. Lütfen giriş yapın ve admin yetkisine sahip olduğunuzdan emin olun.");
-}
 
 // Sefer listesini getir
 $seferler = [];
@@ -34,18 +29,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_mola'])) {
     $mola_ad = isset($_POST['mola_ad']) ? $conn->real_escape_string($_POST['mola_ad']) : null;
     $baslangic = isset($_POST['baslangic']) ? $conn->real_escape_string($_POST['baslangic']) : null;
     $bitis = isset($_POST['bitis']) ? $conn->real_escape_string($_POST['bitis']) : null;
+    $latitude = isset($_POST['latitude']) ? $conn->real_escape_string($_POST['latitude']) : null;
+    $longitude = isset($_POST['longitude']) ? $conn->real_escape_string($_POST['longitude']) : null;
 
-    if (empty($sefer_id) || empty($mola_ad) || empty($baslangic) || empty($bitis)) {
-        echo "<p>Tüm alanları doldurmanız gerekiyor.</p>";
+    if (empty($sefer_id) || empty($mola_ad) || empty($baslangic) || empty($bitis) || empty($latitude) || empty($longitude)) {
+        echo "<p style='color: red;'>Tüm alanları doldurmanız gerekiyor.</p>";
     } else {
-        // Yeni mola kaydı
-        $sql = "INSERT INTO mola (sefer_id, mola_ad, baslangic, bitis) 
-                VALUES ('$sefer_id', '$mola_ad', '$baslangic', '$bitis')";
+        $sql = "INSERT INTO mola (sefer_id, mola_ad, baslangic, bitis, latitude, longitude) 
+                VALUES ('$sefer_id', '$mola_ad', '$baslangic', '$bitis', '$latitude', '$longitude')";
 
         if ($conn->query($sql) === TRUE) {
-            echo "<p>Mola başarıyla kaydedildi!</p>";
+            echo "<p style='color: green;'>Mola başarıyla kaydedildi!</p>";
         } else {
-            echo "<p>Mola kaydedilemedi: " . $conn->error . "</p>";
+            echo "<p style='color: red;'>Mola kaydedilemedi: " . $conn->error . "</p>";
         }
     }
 }
@@ -76,6 +72,10 @@ $conn->close();
         <input type="time" id="baslangic" name="baslangic" required><br>
         <label for="bitis">Bitiş Zamanı:</label>
         <input type="time" id="bitis" name="bitis" required><br>
+        <label for="latitude">Enlem:</label>
+        <input type="text" id="latitude" name="latitude" placeholder="Örn: 39.92077" required><br>
+        <label for="longitude">Boylam:</label>
+        <input type="text" id="longitude" name="longitude" placeholder="Örn: 32.85411" required><br>
         <button type="submit" name="create_mola">Mola Kaydet</button>
     </form>
 </body>

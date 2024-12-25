@@ -23,8 +23,6 @@ if (isset($_POST['logout'])) {
     exit();
 }
 
-
-
 // Kullanıcı Kaydolma
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     $kullanici_id = $conn->real_escape_string($_POST['kullanici_id']); // TC Kimlik No
@@ -38,26 +36,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     if (strlen($kullanici_id) != 11 || !ctype_digit($kullanici_id)) {
         echo "<p>Geçersiz TC Kimlik No. Lütfen 11 haneli bir sayı girin.</p>";
     } else {
-        // `rol` tablosunda `rol_id` değerinin var olup olmadığını kontrol et
-        if (!in_array($rol_id, [1, 2, 3])) {
-            echo "<p>Geçersiz rol ID. Lütfen geçerli bir rol seçin (Admin, Muavin/Şoför, Yolcu).</p>";
+        // Kullanıcı telefon numarası veya TC Kimlik No kontrolü
+        $checkQuery = "SELECT kullanici_id FROM kullanici WHERE kullanici_id = '$kullanici_id' OR kullanici_tel = '$kullanici_tel'";
+        $result = $conn->query($checkQuery);
+
+        if ($result->num_rows > 0) {
+            echo "<p>Bu TC Kimlik No veya telefon numarası zaten kayıtlı.</p>";
         } else {
-            // Kullanıcı telefon numarası veya TC Kimlik No kontrolü
-            $checkQuery = "SELECT kullanici_id FROM kullanici WHERE kullanici_id = '$kullanici_id' OR kullanici_tel = '$kullanici_tel'";
-            $result = $conn->query($checkQuery);
+            // Yeni kullanıcı kaydet
+            $sql = "INSERT INTO kullanici (kullanici_id, kullanici_ad, kullanici_soyad, kullanici_tel, kullanici_sifre, rol_id) 
+                    VALUES ('$kullanici_id', '$kullanici_ad', '$kullanici_soyad', '$kullanici_tel', '$kullanici_sifre', $rol_id)";
 
-            if ($result->num_rows > 0) {
-                echo "<p>Bu TC Kimlik No veya telefon numarası zaten kayıtlı.</p>";
+            if ($conn->query($sql) === TRUE) {
+                echo "<p>Kayıt başarılı! Şimdi giriş yapabilirsiniz.</p>";
             } else {
-                // Yeni kullanıcı kaydet
-                $sql = "INSERT INTO kullanici (kullanici_id, kullanici_ad, kullanici_soyad, kullanici_tel, kullanici_sifre, rol_id) 
-                        VALUES ('$kullanici_id', '$kullanici_ad', '$kullanici_soyad', '$kullanici_tel', '$kullanici_sifre', $rol_id)";
-
-                if ($conn->query($sql) === TRUE) {
-                    echo "<p>Kayıt başarılı! Şimdi giriş yapabilirsiniz.</p>";
-                } else {
-                    echo "<p>Kayıt başarısız: " . $conn->error . "</p>";
-                }
+                echo "<p>Kayıt başarısız: " . $conn->error . "</p>";
             }
         }
     }
@@ -74,25 +67,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         if (password_verify($kullanici_sifre, $user['kullanici_sifre'])) {
-            session_start(); // Oturumu başlat
-            $_SESSION['kullanici_id'] = $user['kullanici_id']; // Kullanıcı ID'sini oturuma ekle
-            $_SESSION['kullanici_ad'] = $user['kullanici_ad']; // Kullanıcı adı
-            $_SESSION['kullanici_soyad'] = $user['kullanici_soyad']; // Kullanıcı soyadı
-        
-            // Oturumda saklanan bilgileri kontrol etmek için:
-            echo "<pre>";
-            print_r($_SESSION);
-            echo "</pre>";
-        
-            // Yönlendirme
-            header("Location: biletal.php");
-            exit();
-        }
-         else {
+            $_SESSION['kullanici_id'] = $user['kullanici_id'];
+            $_SESSION['kullanici_ad'] = $user['kullanici_ad'];
+            $_SESSION['kullanici_soyad'] = $user['kullanici_soyad'];
+        } else {
             echo "<p>Şifre yanlış!</p>";
         }
     } else {
         echo "<p>Telefon numarası bulunamadı.</p>";
+    }
+}
+
+// Kullanıcı bilet bilgilerini al
+$biletBilgileri = [];
+if (isset($_SESSION['kullanici_id'])) {
+    $kullanici_id = $_SESSION['kullanici_id'];
+    $biletQuery = "
+        SELECT b.koltuk_no, b.bilet_fiyat, y.durum, s.sefer_ad, s.tarih, s.saat
+        FROM bilet AS b
+        JOIN yolcu AS y ON b.yolcu_id = y.yolcu_id
+        JOIN seferler AS s ON b.sefer_id = s.sefer_id
+        WHERE y.kullanici_id = '$kullanici_id'
+    ";
+    $biletResult = $conn->query($biletQuery);
+
+    if ($biletResult && $biletResult->num_rows > 0) {
+        while ($row = $biletResult->fetch_assoc()) {
+            $biletBilgileri[] = $row;
+        }
     }
 }
 
@@ -112,7 +114,34 @@ $conn->close();
         <form method="POST" action="">
             <button type="submit" name="logout">Çıkış Yap</button>
         </form>
+
+        <h2>Bilet Bilgileriniz</h2>
+        <?php if (!empty($biletBilgileri)): ?>
+            <table border="1">
+                <tr>
+                    <th>Sefer Adı</th>
+                    <th>Tarih</th>
+                    <th>Saat</th>
+                    <th>Koltuk No</th>
+                    <th>Fiyat</th>
+                    <th>Durum</th>
+                </tr>
+                <?php foreach ($biletBilgileri as $bilet): ?>
+                    <tr>
+                        <td><?= $bilet['sefer_ad'] ?></td>
+                        <td><?= $bilet['tarih'] ?></td>
+                        <td><?= $bilet['saat'] ?></td>
+                        <td><?= $bilet['koltuk_no'] ?></td>
+                        <td><?= $bilet['bilet_fiyat'] ?> TL</td>
+                        <td><?= $bilet['durum'] ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php else: ?>
+            <p>Henüz bir bilet satın almadınız.</p>
+        <?php endif; ?>
     <?php else: ?>
+        <!-- Giriş ve Kayıt Formları -->
         <h1>Kayıt Ol</h1>
         <form method="POST" action="">
             <label for="kullanici_id">TC Kimlik No:</label>
@@ -128,8 +157,8 @@ $conn->close();
             <label for="rol_id">Rol:</label>
             <select id="rol_id" name="rol_id" required>
                 <option value="1">Admin</option>
-                <option value="2">Muavin</option>
-                <option value="3">Şoför</option>
+                <option value="2">Muavin/Şoför</option>
+                <option value="3">Yolcu</option>
             </select><br>
             <button type="submit" name="register">Kayıt Ol</button>
         </form>
@@ -142,8 +171,6 @@ $conn->close();
             <input type="password" id="kullanici_sifre" name="kullanici_sifre" required><br>
             <button type="submit" name="login">Giriş Yap</button>
         </form>
-        <!-- abdurrahman -->
-          <!-- batu -->
     <?php endif; ?>
 </body>
 </html>

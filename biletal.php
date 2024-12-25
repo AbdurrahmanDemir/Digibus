@@ -58,17 +58,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buy_ticket'])) {
         if ($checkResult->num_rows > 0) {
             echo "<p>Bu koltuk zaten rezerve edilmiş.</p>";
         } else {
-            // Daha önce aynı kullanici_tel ve sefer_id eklenmiş mi kontrol et
+            // Yolcunun aynı sefer için zaten kaydı olup olmadığını kontrol et
             $checkYolcuQuery = "SELECT * FROM yolcu WHERE sefer_id = '$sefer_id' AND yolcu_id = '$kullanici_tel'";
             $checkYolcuResult = $conn->query($checkYolcuQuery);
 
             if ($checkYolcuResult->num_rows == 0) {
                 // Yolcu tablosuna ekle
-                $insertYolcuQuery = "INSERT INTO yolcu (sefer_id, yolcu_id) VALUES ('$sefer_id', '$kullanici_tel')";
+                $insertYolcuQuery = "INSERT INTO yolcu (yolcu_id, kullanici_id, sefer_id, durum) 
+                                     VALUES ('$kullanici_tel', '$kullanici_id', '$sefer_id', 'aktif')";
                 if ($conn->query($insertYolcuQuery) === TRUE) {
                     // Bilet tablosuna ekle
-                    $insertBiletQuery = "INSERT INTO bilet (yolcu_id, sefer_id, koltuk_no, durum, fiyat) 
-                                         VALUES ('$kullanici_tel', '$sefer_id', '$koltuk_no', 1, 50)";
+                    $insertBiletQuery = "INSERT INTO bilet (bilet_id, koltuk_no, yolcu_id, sefer_id, bilet_fiyat) 
+                                         VALUES (UUID(), '$koltuk_no', '$kullanici_tel', '$sefer_id', 50)";
                     if ($conn->query($insertBiletQuery) === TRUE) {
                         echo "<p>Bilet başarıyla satın alındı!</p>";
                     } else {
@@ -86,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buy_ticket'])) {
 
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="tr">
