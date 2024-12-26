@@ -5,6 +5,8 @@ define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME', 'digibus');
 
+include 'header.php';
+include 'sidebar.php';
 // Veritabanına bağlan
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
@@ -65,32 +67,49 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <h1>Admin Dashboard</h1>
+<body class="bg-light">
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Admin Dashboard</h1>
 
-    <!-- Tarih Seçim Formu -->
-    <form method="POST" action="">
-        <label for="year">Yıl:</label>
-        <select id="year" name="year">
-            <?php foreach ($years as $year): ?>
-                <option value="<?= $year ?>" <?= $year == $selectedYear ? 'selected' : '' ?>><?= $year ?></option>
-            <?php endforeach; ?>
-        </select>
-        <label for="month">Ay:</label>
-        <select id="month" name="month">
-            <?php foreach ($months as $month): ?>
-                <option value="<?= $month ?>" <?= $month == $selectedMonth ? 'selected' : '' ?>>
-                    <?= date('F', mktime(0, 0, 0, $month, 10)) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <button type="submit">Filtrele</button>
-    </form>
+        <!-- Tarih Seçim Formu -->
+        <div class="card p-4 mb-4 shadow">
+            <form method="POST" action="">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="year" class="form-label">Yıl:</label>
+                        <select id="year" name="year" class="form-select">
+                            <?php foreach ($years as $year): ?>
+                                <option value="<?= $year ?>" <?= $year == $selectedYear ? 'selected' : '' ?>><?= $year ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="month" class="form-label">Ay:</label>
+                        <select id="month" name="month" class="form-select">
+                            <?php foreach ($months as $month): ?>
+                                <option value="<?= $month ?>" <?= $month == $selectedMonth ? 'selected' : '' ?>>
+                                    <?= date('F', mktime(0, 0, 0, $month, 10)) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="submit" class="btn btn-primary">Filtrele</button>
+                </div>
+            </form>
+        </div>
 
-    <!-- Grafik -->
-    <canvas id="dashboardChart" width="400" height="200"></canvas>
+        <!-- Grafik -->
+        <div class="card p-4 shadow">
+            <h2 class="text-center mb-3">İstatistikler</h2>
+            <canvas id="dashboardChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
     <script>
         const ctx = document.getElementById('dashboardChart').getContext('2d');
         const data = {
@@ -115,5 +134,7 @@ $conn->close();
         };
         new Chart(ctx, config);
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -4,14 +4,18 @@ define('DB_SERVER', 'localhost');
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME', 'digibus');
-
+include 'header.php';
+include 'sidebar.php';
 // Veritabanına bağlan
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 if ($conn->connect_error) {
     die("Veritabanı bağlantısı başarısız: " . $conn->connect_error);
 }
 
-session_start();
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Kullanıcı oturum kontrolü
 if (!isset($_GET['sefer_id'])) {
@@ -77,6 +81,7 @@ function molaSuresi($baslangic, $bitis) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sefer Detayları</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -87,42 +92,72 @@ function molaSuresi($baslangic, $bitis) {
         }
     </style>
 </head>
-<body>
-    <h1>Sefer Detayları</h1>
-    <?php if (!empty($seferDetaylari)): ?>
-        <h2>Sefer Bilgileri</h2>
-        <p><strong>Sefer Adı:</strong> <?= $seferDetaylari['sefer_ad'] ?></p>
-        <p><strong>Başlangıç Noktası:</strong> <?= $seferDetaylari['baslangic_il'] ?></p>
-        <p><strong>Varış Noktası:</strong> <?= $seferDetaylari['varis_il'] ?></p>
-        <p><strong>Tarih:</strong> <?= $seferDetaylari['tarih'] ?></p>
-        <p><strong>Saat:</strong> <?= $seferDetaylari['saat'] ?></p>
-    <?php endif; ?>
+<body class="bg-light">
+    <div class="container my-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h1 class="text-center">Sefer Detayları</h1>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($seferDetaylari)): ?>
+                    <h2 class="text-center mb-4">Sefer Bilgileri</h2>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Sefer Adı</th>
+                            <td><?= $seferDetaylari['sefer_ad'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Başlangıç Noktası</th>
+                            <td><?= $seferDetaylari['baslangic_il'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Varış Noktası</th>
+                            <td><?= $seferDetaylari['varis_il'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Tarih</th>
+                            <td><?= $seferDetaylari['tarih'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Saat</th>
+                            <td><?= $seferDetaylari['saat'] ?></td>
+                        </tr>
+                    </table>
+                <?php endif; ?>
 
-    <?php if (!empty($molalar)): ?>
-        <h2>Mola Bilgileri</h2>
-        <table border="1">
-            <tr>
-                <th>Mola Adı</th>
-                <th>Başlangıç</th>
-                <th>Bitiş</th>
-                <th>Kalan Süre</th>
-                <th>Mola Süresi</th>
-            </tr>
-            <?php foreach ($molalar as $mola): ?>
-                <tr>
-                    <td><?= $mola['mola_ad'] ?></td>
-                    <td><?= $mola['baslangic'] ?></td>
-                    <td><?= $mola['bitis'] ?></td>
-                    <td><?= kalanSure($mola['baslangic']) ?></td>
-                    <td><?= molaSuresi($mola['baslangic'], $mola['bitis']) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p>Bu sefere ait mola bilgisi bulunamadı.</p>
-    <?php endif; ?>
-
-    <div id="map"></div>
+                <?php if (!empty($molalar)): ?>
+                    <h2 class="text-center mt-5 mb-4">Mola Bilgileri</h2>
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mola Adı</th>
+                                <th>Başlangıç</th>
+                                <th>Bitiş</th>
+                                <th>Kalan Süre</th>
+                                <th>Mola Süresi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($molalar as $mola): ?>
+                                <tr>
+                                    <td><?= $mola['mola_ad'] ?></td>
+                                    <td><?= $mola['baslangic'] ?></td>
+                                    <td><?= $mola['bitis'] ?></td>
+                                    <td><?= kalanSure($mola['baslangic']) ?></td>
+                                    <td><?= molaSuresi($mola['baslangic'], $mola['bitis']) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <div class="alert alert-warning text-center mt-4">
+                        Bu sefere ait mola bilgisi bulunamadı.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div id="map" class="mt-5"></div>
+    </div>
 
     <script>
         const map = L.map('map').setView([<?= $seferDetaylari['baslangic_lat'] ?>, <?= $seferDetaylari['baslangic_lng'] ?>], 7);
@@ -149,5 +184,7 @@ function molaSuresi($baslangic, $bitis) {
             .bindPopup("<b>Mola:</b> <?= $mola['mola_ad'] ?>");
         <?php endforeach; ?>
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

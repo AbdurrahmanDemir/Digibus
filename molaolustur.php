@@ -4,14 +4,18 @@ define('DB_SERVER', 'localhost');
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME', 'digibus');
-
+include 'header.php';
+include 'sidebar.php';
 // Veritabanına bağlan
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 if ($conn->connect_error) {
     die("Veritabanı bağlantısı başarısız: " . $conn->connect_error);
 }
 
-session_start();
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Sefer listesini getir
 $seferler = [];
@@ -71,6 +75,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mola Oluştur</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script>
         const iller = <?= json_encode($iller) ?>;
         function ilSecildi(select) {
@@ -83,34 +88,59 @@ $conn->close();
         }
     </script>
 </head>
-<body>
-    <h1>Mola Oluştur</h1>
-    <form method="POST" action="">
-        <label for="sefer_id">Sefer:</label>
-        <select id="sefer_id" name="sefer_id" required>
-            <option value="">Sefer Seçin</option>
-            <?php foreach ($seferler as $sefer): ?>
-                <option value="<?= $sefer['sefer_id'] ?>"><?= $sefer['sefer_ad'] ?></option>
-            <?php endforeach; ?>
-        </select><br>
-        <label for="mola_ad">Mola Adı:</label>
-        <input type="text" id="mola_ad" name="mola_ad" required><br>
-        <label for="il_id">İl:</label>
-        <select id="il_id" name="il_id" onchange="ilSecildi(this)" required>
-            <option value="">İl Seçin</option>
-            <?php foreach ($iller as $il): ?>
-                <option value="<?= $il['il_id'] ?>"><?= $il['il_adi'] ?></option>
-            <?php endforeach; ?>
-        </select><br>
-        <label for="latitude">Enlem:</label>
-        <input type="text" id="latitude" name="latitude" readonly><br>
-        <label for="longitude">Boylam:</label>
-        <input type="text" id="longitude" name="longitude" readonly><br>
-        <label for="baslangic">Başlangıç Zamanı:</label>
-        <input type="time" id="baslangic" name="baslangic" required><br>
-        <label for="bitis">Bitiş Zamanı:</label>
-        <input type="time" id="bitis" name="bitis" required><br>
-        <button type="submit" name="create_mola">Mola Kaydet</button>
-    </form>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h1 class="text-center">Mola Oluştur</h1>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    <div class="mb-3">
+                        <label for="sefer_id" class="form-label">Sefer:</label>
+                        <select id="sefer_id" name="sefer_id" class="form-select" required>
+                            <option value="">Sefer Seçin</option>
+                            <?php foreach ($seferler as $sefer): ?>
+                                <option value="<?= $sefer['sefer_id'] ?>"><?= $sefer['sefer_ad'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mola_ad" class="form-label">Mola Adı:</label>
+                        <input type="text" id="mola_ad" name="mola_ad" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="il_id" class="form-label">İl:</label>
+                        <select id="il_id" name="il_id" class="form-select" onchange="ilSecildi(this)" required>
+                            <option value="">İl Seçin</option>
+                            <?php foreach ($iller as $il): ?>
+                                <option value="<?= $il['il_id'] ?>"><?= $il['il_adi'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="latitude" class="form-label">Enlem:</label>
+                        <input type="text" id="latitude" name="latitude" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="longitude" class="form-label">Boylam:</label>
+                        <input type="text" id="longitude" name="longitude" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="baslangic" class="form-label">Başlangıç Zamanı:</label>
+                        <input type="time" id="baslangic" name="baslangic" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bitis" class="form-label">Bitiş Zamanı:</label>
+                        <input type="time" id="bitis" name="bitis" class="form-control" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" name="create_mola" class="btn btn-success">Mola Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
