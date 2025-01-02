@@ -82,7 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buy_ticket'])) {
                     echo "<div class='alert alert-danger'>Yolcu kaydedilemedi: " . $conn->error . "</div>";
                 }
             } else {
-                echo "<div class='alert alert-warning'>Bu sefer için zaten kaydınız var.</div>";
+                echo "<div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+        <div class='alert alert-warning' style='text-align: center;'>
+            Bu sefer için zaten kaydınız var.
+        </div>
+      </div>";
+
             }
         }
     }
@@ -98,12 +103,19 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bilet Al</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
         .seat-map {
-            display: grid;
-            grid-template-columns: repeat(5, 50px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 10px;
             margin: 20px 0;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
         .seat {
             width: 50px;
@@ -111,20 +123,35 @@ $conn->close();
             text-align: center;
             line-height: 50px;
             border: 1px solid #ccc;
-            cursor: pointer;
-        }
-        .available {
+            border-radius: 5px;
             background-color: #4CAF50;
             color: white;
+            cursor: pointer;
         }
-        .selected {
+        .seat.occupied {
+            background-color: #f44336;
+            cursor: not-allowed;
+        }
+        .seat.selected {
             background-color: #2196F3;
             color: white;
         }
-        .occupied {
-            background-color: #f44336;
-            color: white;
+        .seat.unavailable {
+            background-color: #d3d3d3;
+            color: black;
             cursor: not-allowed;
+        }
+        .seat.driver, .seat.muavin {
+            background-color: #d3d3d3;
+            color: black;
+            cursor: not-allowed;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .seat-spacer {
+            width: 50px;
+            height: 50px;
+            background-color: transparent;
         }
     </style>
 </head>
@@ -143,29 +170,110 @@ $conn->close();
         </div>
 
         <h2 class="mt-4">Koltuk Seçimi</h2>
-        <div class="seat-map">
-            <?php for ($i = 1; $i <= 20; $i++): ?>
-                <div class="seat available" data-seat-number="<?= $i ?>"><?= $i ?></div>
-            <?php endfor; ?>
+        <div id="seat-map" class="seat-map">
+            <p>Lütfen önce bir sefer seçiniz.</p>
         </div>
 
         <input type="hidden" id="koltuk_no" name="koltuk_no">
-        <button type="submit" name="buy_ticket" class="btn btn-primary mt-3">Bilet Al</button>
+        <button type="submit" name="buy_ticket" class="btn btn-primary mt-3" disabled id="buy-ticket-btn">Bilet Al</button>
     </form>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const seats = document.querySelectorAll('.seat');
-        seats.forEach(seat => {
-            seat.addEventListener('click', function() {
-                if (this.classList.contains('available')) {
-                    document.querySelectorAll('.selected').forEach(selected => selected.classList.remove('selected'));
+    document.addEventListener('DOMContentLoaded', function () {
+        const seferSelect = document.getElementById('sefer_id');
+        const seatMap = document.getElementById('seat-map');
+        const buyTicketBtn = document.getElementById('buy-ticket-btn');
+        
+        seferSelect.addEventListener('change', function () {
+            const seferId = this.value;
+
+            if (!seferId) {
+                seatMap.innerHTML = '<p>Lütfen bir sefer seçiniz.</p>';
+                buyTicketBtn.disabled = true;
+                return;
+            }
+
+            // AJAX ile koltuk durumlarını al
+            fetch(`get_seats.php?sefer_id=${seferId}`)
+                .then(response => response.json())
+                .then(data => {
+                    seatMap.innerHTML = ''; // Eski içeriği temizle
+                    buyTicketBtn.disabled = false;
+
+                    // Koltukları oluştur
+                    for (let row = 1; row <= 10; row++) {
+                        const rowDiv = document.createElement('div');
+                        rowDiv.classList.add('row');
+
+                        // İlk satır için özel düzen
+                        if (row === 1) {
+                            const muavinDiv = document.createElement('div');
+                            muavinDiv.classList.add('seat', 'muavin');
+                            muavinDiv.textContent = 'Muavin';
+                            rowDiv.appendChild(muavinDiv);
+
+                            const surucuDiv = document.createElement('div');
+                            surucuDiv.classList.add('seat', 'driver');
+                            surucuDiv.textContent = 'Şoför';
+                            rowDiv.appendChild(surucuDiv);
+
+                            const driverSpacer = document.createElement('div');
+                            driverSpacer.classList.add('seat-spacer');
+                            rowDiv.appendChild(driverSpacer);
+                        } else {
+                            const leftSeat = createSeatDiv(data, (row - 2) * 3 + 3);
+                            const rightSeat1 = createSeatDiv(data, (row - 2) * 3 + 4);
+                            const rightSeat2 = createSeatDiv(data, (row - 2) * 3 + 5);
+
+                            rowDiv.appendChild(leftSeat);
+                            rowDiv.appendChild(createSpacerDiv());
+                            rowDiv.appendChild(rightSeat1);
+                            rowDiv.appendChild(rightSeat2);
+                        }
+                        seatMap.appendChild(rowDiv);
+                    }
+
+                    addSeatClickEvents();
+                })
+                .catch(error => {
+                    console.error('Hata:', error);
+                    seatMap.innerHTML = '<p>Koltuk bilgileri yüklenemedi.</p>';
+                });
+        });
+
+        function createSeatDiv(data, seatNumber) {
+            const seatDiv = document.createElement('div');
+            seatDiv.classList.add('seat');
+
+            if (data.occupiedSeats.includes(seatNumber.toString())) {
+                seatDiv.classList.add('occupied');
+                seatDiv.textContent = seatNumber;
+            } else {
+                seatDiv.classList.add('available');
+                seatDiv.textContent = seatNumber;
+                seatDiv.dataset.seatNumber = seatNumber;
+            }
+
+            return seatDiv;
+        }
+
+        function createSpacerDiv() {
+            const spacerDiv = document.createElement('div');
+            spacerDiv.classList.add('seat-spacer');
+            return spacerDiv;
+        }
+
+        function addSeatClickEvents() {
+            const seats = document.querySelectorAll('.seat.available');
+            seats.forEach(seat => {
+                seat.addEventListener('click', function () {
+                    document.querySelectorAll('.seat.selected').forEach(selected => selected.classList.remove('selected'));
                     this.classList.add('selected');
                     document.getElementById('koltuk_no').value = this.dataset.seatNumber;
-                }
+                });
             });
-        });
+        }
     });
 </script>
 
@@ -173,3 +281,4 @@ $conn->close();
 
 </body>
 </html>
+

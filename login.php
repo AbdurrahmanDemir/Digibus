@@ -99,7 +99,7 @@ $biletBilgileri = [];
 if (isset($_SESSION['kullanici_id'])) {
     $kullanici_id = $_SESSION['kullanici_id'];
     $biletQuery = "
-    SELECT b.koltuk_no, b.bilet_fiyat, y.durum, s.sefer_ad, s.tarih, s.saat, b.sefer_id
+    SELECT b.koltuk_no, b.bilet_fiyat, y.durum, s.sefer_ad, s.tarih, s.saat, b.sefer_id, b.bilet_id
     FROM bilet AS b
     JOIN yolcu AS y ON b.yolcu_id = y.yolcu_id
     JOIN seferler AS s ON b.sefer_id = s.sefer_id
@@ -169,10 +169,15 @@ $conn->close();
                                     <span><strong>Durum:</strong> <?= $bilet['durum'] ?></span>
                                     <span><strong>Sefer:</strong> <?= $bilet['sefer_ad'] ?></span>
                                 </div>
-                                <form method="GET" action="seferdetaylari.php">
-    <input type="hidden" name="sefer_id" value="<?= $bilet['sefer_id'] ?>">
-    <button type="submit">Detay Gör</button>
-</form>
+                                <form method="GET" action="seferdetaylari.php" style="display: inline-block;">
+                                    <input type="hidden" name="sefer_id" value="<?= $bilet['sefer_id'] ?>">
+                                    <button type="submit" class="btn btn-info btn-sm">Detay Gör</button>
+                                </form>
+                                <form method="POST" action="bilet_sil.php" style="display: inline-block;">
+                                    <input type="hidden" name="bilet_id" value="<?= $bilet['bilet_id'] ?>">
+                                    <a href="bilet_sil.php?bilet_id=<?= $bilet['bilet_id'] ?>" class="btn btn-danger btn-sm">Biletini Sil</a>
+
+                                </form>
                                 <div class="bar--code"></div>
                             </div>
                         </div>
@@ -236,4 +241,3 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

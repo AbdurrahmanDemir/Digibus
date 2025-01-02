@@ -59,9 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_mola'])) {
                 VALUES ('$sefer_id', '$mola_ad', '$baslangic', '$bitis', '$latitude', '$longitude')";
 
         if ($conn->query($sql) === TRUE) {
-            echo "<p style='color: green;'>Mola başarıyla kaydedildi!</p>";
+            
+
+            echo "<div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+        <div class='alert alert-warning' style='text-align: center;'>
+            Mola başarıyla kaydedildi!
+        </div>
+      </div>";
+
+
         } else {
-            echo "<p style='color: red;'>Mola kaydedilemedi: " . $conn->error . "</p>";
+            
+
+            echo "<div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+            <div class='alert alert-warning' style='text-align: center;'>
+                Mola kaydedilemedi.
+            </div>
+          </div>";
         }
     }
 }

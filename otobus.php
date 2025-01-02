@@ -32,9 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bus'])) {
         $sql = "INSERT INTO otobüs (otobüs_id, kapasite, otobüs_plaka) VALUES ('$otobüs_plaka', $kapasite, '$otobüs_plaka')";
 
         if ($conn->query($sql) === TRUE) {
-            echo "<p>Otobüs başarıyla kaydedildi!</p>";
+            
+
+            echo "<div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+        <div class='alert alert-warning' style='text-align: center;'>
+            Otobüs başarıyla kaydedildi!
+        </div>
+      </div>";
         } else {
-            echo "<p>Otobüs kaydedilemedi: " . $conn->error . "</p>";
+
+            echo "<div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+        <div class='alert alert-warning' style='text-align: center;'>
+            Otobüs kaydedilemedi
+        </div>
+      </div>";
         }
     }
 }
