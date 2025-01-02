@@ -56,9 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_sefer'])) {
                 VALUES ('$sefer_id', '$otobüs_id', '$baslangic_noktasi', '$varis_noktasi', '$tarih', '$saat', '$sefer_ad')";
 
         if ($conn->query($sql) === TRUE) {
-            echo "<p style='color: green;'>Sefer başarıyla kaydedildi!</p>";
+            
+
+            echo "<div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+        <div class='alert alert-warning' style='text-align: center;'>
+            Sefer başarıyla kaydedildi!
+        </div>
+      </div>";
+
+
         } else {
-            echo "<p style='color: red;'>Sefer kaydedilemedi: " . $conn->error . "</p>";
+            echo "<div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+        <div class='alert alert-warning' style='text-align: center;'>
+            Sefer Kaydedilemedi.
+        </div>
+      </div>";
         }
     }
 }
