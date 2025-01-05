@@ -127,17 +127,81 @@ $conn->close();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body, h1, p { margin: 0; padding: 0; font-family: 'Open Sans', sans-serif; }
-        .container { margin-top: 30px; }
-        .ticket { max-width: 300px; margin: 20px auto; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); border-radius: 10px; }
-        .ticket .top { background: #ffcc05; padding: 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px; }
-        .ticket .top h1 { margin: 0; font-size: 24px; }
-        .ticket .top .big { font-size: 16px; margin-top: 10px; }
-        .ticket .top .big .from { color: #333; font-weight: bold; }
-        .ticket .top .big .to { color: #555; }
-        .ticket .bottom { background: #fff; padding: 20px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; }
-        .ticket .bottom .info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
-        .ticket .bottom .bar--code { height: 50px; background: repeating-linear-gradient(90deg, #000, #000 5px, #fff 5px, #fff 10px); }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Open Sans', sans-serif;
+            background-image: url('https://i.hizliresim.com/8jq235n.png?_gl=1*17lu4gp*_ga*MTk0MjY4MTguMTczNjExNzU2OQ..*_ga_M9ZRXYS2YN*MTczNjExNzU2OS4xLjEuMTczNjExNzU3Ni41My4wLjA.'); /* Burada otobüs görseli URL'si kullanılmalıdır */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #000;
+        }
+        .container {
+            margin-top: 30px;
+            background-color: rgba(0, 0, 0, 0); /* Arka planı şeffaf siyah yapar */
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .header-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffcc05;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 30px;
+        }
+        .form-label, h1, p {
+            color: #000; 
+        }
+        .btn-primary, .btn-danger, .btn-success {
+            font-weight: bold;
+        }
+        .ticket {
+            max-width: 300px;
+            margin: 20px auto;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background-color: #fff;
+        }
+        .ticket .top {
+            background: #ffcc05;
+            padding: 20px;
+            text-align: center;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .ticket .top h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .ticket .top .big {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .ticket .top .big .from {
+            color: #333;
+            font-weight: bold;
+        }
+        .ticket .top .big .to {
+            color: #555;
+        }
+        .ticket .bottom {
+            background: #fff;
+            padding: 20px;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        .ticket .bottom .info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .ticket .bottom .bar--code {
+            height: 50px;
+            background: repeating-linear-gradient(90deg, #000, #000 5px, #fff 5px, #fff 10px);
+        }
     </style>
 </head>
 <body>
@@ -176,7 +240,6 @@ $conn->close();
                                 <form method="POST" action="bilet_sil.php" style="display: inline-block;">
                                     <input type="hidden" name="bilet_id" value="<?= $bilet['bilet_id'] ?>">
                                     <a href="bilet_sil.php?bilet_id=<?= $bilet['bilet_id'] ?>" class="btn btn-danger btn-sm">Biletini Sil</a>
-
                                 </form>
                                 <div class="bar--code"></div>
                             </div>
@@ -212,11 +275,11 @@ $conn->close();
                             <input type="password" id="kullanici_sifre" name="kullanici_sifre" class="form-control" required>
                         </div>
                         <label for="rol_id">Rol:</label>
-            <select id="rol_id" name="rol_id" required>
-                <option value="1">Admin</option>
-                <option value="2">Muavin/Şoför</option>
-                <option value="3">Yolcu</option>
-            </select><br>
+                        <select id="rol_id" name="rol_id" required>
+                            <option value="1">Admin</option>
+                            <option value="2">Muavin/Şoför</option>
+                            <option value="3">Yolcu</option>
+                        </select><br>
                         <button type="submit" name="register" class="btn btn-success">Kayıt Ol</button>
                     </form>
                 </div>
@@ -239,3 +302,4 @@ $conn->close();
     </div>
 </body>
 </html>
+
